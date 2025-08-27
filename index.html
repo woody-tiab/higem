@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 퀴즈 생성 어시스턴트: 사용자 매뉴얼</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css" type="text/css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0052cc;
+            --background-color: #f0f2f5;
+            --text-color: #172b4d;
+            --hero-text-color: #ffffff;
+            --container-bg-color: #ffffff;
+            --container-border-color: #dee2e6;
+            --container-shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Paperlogy", 'Pretendard', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .presentation-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-origin: center center;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .slide {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 5vw 10vw;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+            gap: 2rem;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            z-index: 1;
+        }
+
+        .slide.exit-left {
+            transform: translateX(-50%) scale(0.8);
+            opacity: 0;
+        }
+
+        .slide.exit-right {
+            transform: translateX(50%) scale(0.8);
+            opacity: 0;
+        }
+
+        .hero-slide {
+            background: linear-gradient(135deg, var(--primary-color), #003380);
+            color: var(--hero-text-color);
+            text-align: center;
+        }
+
+        .hero-main-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            word-break: keep-all;
+            line-height: 1.3;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        .section-hero-slide .hero-main-title {
+             font-size: clamp(2.8rem, 7vw, 5rem);
+        }
+
+        .content-slide {
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .content-slide:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .icon-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .icon-container i {
+            font-size: clamp(8rem, 20vw, 15rem);
+            color: var(--primary-color);
+            opacity: 0.15;
+        }
+        
+        .text-container {
+            flex: 2;
+            padding: 2.5rem;
+            background-color: var(--container-bg-color);
+            border-radius: 15px;
+            border: 1px solid var(--container-border-color);
+            box-shadow: 0 10px 25px var(--container-shadow-color);
+            max-width: 700px;
+        }
+
+        .slide-title {
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            word-break: keep-all;
+        }
+
+        .slide-body {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .slide-body li {
+            font-size: clamp(1rem, 1.8vw, 1.25rem);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            padding-left: 1.5em;
+            position: relative;
+        }
+
+        .slide-body li::before {
+            content: '\f00c'; /* Font Awesome check icon */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--primary-color);
+            position: absolute;
+            left: 0;
+            top: 5px;
+        }
+        
+        .slide-body li strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .copy-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .copy-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-family: "Paperlogy", 'Pretendard', sans-serif;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        .copy-btn:hover {
+            background-color: #003380; /* A darker shade of the primary color */
+        }
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+        .copy-btn.copied {
+            background-color: #00875A; /* Green color for success */
+        }
+
+        /* UI Controls */
+        .ui-controls {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1000;
+        }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            z-index: 10;
+        }
+        
+        .nav-arrow:hover {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        #prev-slide {
+            left: 20px;
+        }
+
+        #next-slide {
+            right: 20px;
+        }
+
+        #page-number {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .viewer-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .control-btn {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .control-btn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .menu {
+            position: absolute;
+            bottom: 50px; /* Position above the button */
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 5px;
+            display: none; /* Initially hidden */
+        }
+        
+        .menu .control-btn {
+            background-color: transparent;
+            width: 35px;
+            height: 35px;
+        }
+        
+        .menu .control-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #zoom-menu-container, #save-menu-container {
+            position: relative;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        .loading-overlay .fa-spinner {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="presentation-container">
+        <!-- Slide 1: Cover -->
+        <section class="slide hero-slide active">
+            <h1 class="hero-main-title">하이러닝 문제 생성 GEM</h1>
+            <p class="hero-subtitle">사용자 매뉴얼</p>
+        </section>
+
+        <!-- Slide 2: What is GEM? Section Hero -->
+        <section class="slide hero-slide section-hero-slide">
+            <h2 class="hero-main-title">GEM은 무엇인가요? 🤔</h2>
+        </section>
+
+        <!-- Slide 3: What is GEM? Details -->
+        <section class="slide content-slide">
+            <div class="icon-container">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="text-container">
+                <h3 class="slide-title">지능형 퀴즈 생성 어시스턴트</h3>
+                <ul class="slide-body">
+                    <li>사용자가 제공하는 <strong>학습 자료(주제, 본문, 파일 등)</strong>를 분석함.</li>
+                    <li>교육적으로 의미 있는 <strong>객관식 및 주관식 퀴즈</strong>를 자동으로 생성함.</li>
+                    <li><strong>주요 기능:</strong> 자동 퀴즈 생성, 맞춤형 설정, 지문 생성, 정확한 결과물 형식 제공.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 4: Create Your Own GEM Section Hero -->
+        <section class="slide hero-slide section-hero-slide">
+            <h2 class="hero-main-title">나만의 GEM 만들기 🛠️</h2>
+        </section>
+
+        <!-- Slide 5: Create Your Own GEM Details -->
+        <section class="slide content-slide">
+            <div class="icon-container">
+                <i class="fas fa-magic"></i>
+            </div>
+            <div class="text-container">
+                <h3 class="slide-title">GEM 지침 적용 방법</h3>
+                <ul class="slide-body">
+                    <li><strong>1단계:</strong> 아래 '지침 복사하기' 버튼을 클릭합니다.</li>
+                    <li><strong>2단계:</strong> 'Gems 탐색하기' 메뉴에서 '새 Gem 만들기'를 클릭합니다.</li>
+                    <li><strong>3단계:</strong> '요청사항' 입력란에 붙여넣기(Ctrl+V) 합니다.</li>
+                    <li><strong>4단계:</strong> 나만의 Gem을 저장하고 바로 사용을 시작할 수 있습니다!</li>
+                </ul>
+                <div class="copy-container">
+                    <button id="copy-gem-btn" class="copy-btn"><i class="fas fa-copy"></i> 지침 복사하기</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 6: How to Use Section Hero -->
+        <section class="slide hero-slide section-hero-slide">
+            <h2 class="hero-main-title">GEM 사용 방법 📝</h2>
+        </section>
+
+        <!-- Slide 7: How to Use Details 1 -->
+        <section class="slide content-slide">
+            <div class="icon-container">
+                <i class="fas fa-keyboard"></i>
+            </div>
+            <div class="text-container">
+                <h3 class="slide-title">1. 학습 내용 입력하기</h3>
+                <ul class="slide-body">
+                    <li><strong>주제, 텍스트, 파일 첨부</strong> 등 퀴즈를 만들고 싶은 핵심 내용을 입력함.</li>
+                    <li><strong>예시:</strong> '조선 시대의 왕', '세종대왕은 훈민정음을 창제했다.' 등.</li>
+                    <li>💡 <strong>Tip:</strong> 내용이 구체적이고 상세할수록 더 수준 높은 문제가 만들어짐.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 8: How to Use Details 2 -->
+        <section class="slide content-slide">
+            <div class="icon-container">
+                <i class="fas fa-list-ol"></i>
+            </div>
+            <div class="text-container">
+                <h3 class="slide-title">2. 퀴즈 옵션 설정하기</h3>
+                <ul class="slide-body">
+                    <li><strong>객관식/주관식 문항 수:</strong> 생성할 문제 개수를 숫자로 입력.</li>
+                    <li><strong>객관식 보기 수:</strong> 선택지 개수를 '4' 또는 '5'로 지정.</li>
+                    <li><strong>지문 생성 여부:</strong> 문제와 연계된 지문 필요 여부를 '예/아니오'로 선택.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 9: Expected Output Section Hero -->
+        <section class="slide hero-slide section-hero-slide">
+            <h2 class="hero-main-title">예상 결과물 확인하기 📊</h2>
+        </section>
+
+        <!-- Slide 10: Expected Output Details -->
+        <section class="slide content-slide">
+            <div class="icon-container">
+                <i class="fas fa-table"></i>
+            </div>
+            <div class="text-container">
+                <h3 class="slide-title">결과물 형식</h3>
+                <ul class="slide-body">
+                    <li><strong>지문 (요청 시):</strong> 학습 내용이 요약된 지문이 텍스트 블록 형태로 제공됨.</li>
+                    <li><strong>퀴즈 세트 (필수):</strong> '하이러닝' 플랫폼에 바로 사용 가능한 <strong>표 형식</strong>으로 모든 문제가 정리되어 제공됨.</li>
+                    <li>표에는 번호, 구분, 문항, 보기, 정답, 상세 해설이 포함됨.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 11: Error Guide Section Hero -->
+        <section class="slide hero-slide section-hero-slide">
+            <h2 class="hero-main-title">이럴 땐 어떻게 하죠? ⚠️</h2>
+        </section>
+
+        <!-- Slide 12: Error Guide Details -->
+        <section class="slide content-slide">
+            <div class="icon-container">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="text-container">
+                <h3 class="slide-title">오류 메시지 안내</h3>
+                <ul class="slide-body">
+                    <li><strong>안내 메시지 A:</strong> 주제는 입력했으나, 퀴즈 설정(문항 수 등)을 빠뜨린 경우. → <strong>퀴즈 설정을 다시 입력하세요.</strong></li>
+                    <li><strong>안내 메시지 B:</strong> 주제를 포함한 모든 정보가 비어있는 경우. → <strong>5가지 전체 항목을 모두 입력하세요.</strong></li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- Slide 13: Final -->
+        <section class="slide hero-slide">
+            <h2 class="hero-main-title">이제 여러분도<br>쉽고 빠른 퀴즈 생성을<br>시작해보세요!</h2>
+        </section>
+
+    </div>
+    
+    <textarea id="gem-instructions" style="position: absolute; left: -9999px;"># AI 교육 콘텐츠 전문가: 하이러닝 플랫폼 퀴즈 생성 어시스턴트
+
+## 페르소나 (Persona)
+당신은 '하이러닝'이라는 교육 플랫폼을 위한 퀴즈 콘텐츠를 전문적으로 생성하는 AI 어시스턴트입니다. 당신의 임무는 사용자가 제공하는 **주제, 텍스트, 또는 첨부 파일**을 기반으로, 교육적 효과가 높은 고품질 퀴즈를 지정된 형식에 맞춰 신속하고 정확하게 생성하는 것입니다.
+
+## 절대 규칙 (Absolute Rule)
+* 어떠한 경우에도 결과물에 ``, `[cite_end]`와 같은 출처 표시 태그를 절대로 포함해서는 안 됩니다. 모든 내용은 일반 텍스트로만 구성되어야 합니다.
+
+## 지시사항 (Instructions)
+
+**1. 스마트 입력 검사:** 작업을 시작하기 전에 [사용자 입력] 섹션을 다음 논리에 따라 **가장 먼저** 검사합니다.
+
+* **[조건 A] `1. 주제, 텍스트 또는 첨부 파일` 항목은 충족되었으나, `2`~`5`번 항목 중 하나라도 비어있는 경우:**
+    * 퀴즈를 생성하지 **말고**, 아래 **[안내 메시지 A]** 를 정확히 출력한 후 모든 작업을 즉시 중단합니다.
+
+* **[조건 B] `1. 주제, 텍스트 또는 첨부 파일` 항목부터 비어있는 경우:**
+    * 퀴즈를 생성하지 **말고**, 아래 **[안내 메시지 B]** 를 정확히 출력한 후 모든 작업을 즉시 중단합니다.
+
+* **[조건 C] `1`~`5`번 모든 항목이 명확하게 채워져 있는 경우:**
+    * 다음 `2번` 단계로 진행하여 퀴즈 생성을 시작합니다.
+
+---
+>**[안내 메시지 A]**
+> 주제/파일을 확인했습니다. 퀴즈 생성을 완료하려면, 아래 **4가지 항목을 1번부터 새로 입력**하여 다시 요청해주세요.
+> ```markdown
+> 1. 객관식 문항 수:
+> 2. 주관식 문항 수:
+> 3. 객관식 보기 수 (4 또는 5):
+> 4. 지문 생성 여부 (예/아니오):
+> ```
+
+>**[안내 메시지 B]**
+> 퀴즈 생성을 위해 필요한 정보가 부족합니다. 아래 5가지 항목을 [사용자 입력] 섹션에 모두 기입하여 다시 요청해주세요.
+> ```markdown
+> 1. 주제, 텍스트 또는 첨부 파일:
+> 2. 객관식 문항 수:
+> 3. 주관식 문항 수:
+> 4. 객관식 보기 수 (4 또는 5):
+> 5. 지문 생성 여부 (예/아니오):
+> ```
+---
+
+**2. 지문 생성 (선택 사항):** `5. 지문 생성 여부`가 '예'일 경우에만, 생성될 문제들과 유기적으로 연결되는 완성도 높은 지문을 먼저 생성합니다.
+
+**3. 퀴즈 생성:**
+    * 사용자가 요청한 총 문항 수(`2번`, `3번` 항목의 합)에 맞춰 순서대로 퀴즈를 생성합니다.
+    * **객관식 문제:**
+        * '문항' 칸에는 질문 텍스트만 명확하게 작성합니다.
+        * '보기1'부터 '보기5'까지 각 칸에 선택지 내용을 하나씩 나누어 입력합니다. `4. 객관식 보기 수`가 '4'이면 '보기5' 칸은 비워둡니다.
+        * '정답' 칸에는 정답에 해당하는 보기의 '숫자'만 기재합니다. (예: `3`)
+        * '해설' 칸에는 정답에 대한 상세하고 친절한 설명을 작성합니다.
+    * **주관식 (단답형) 문제:**
+        * '문항' 칸에는 **반드시 특정 용어, 이름, 숫자 등 단답으로 답할 수 있는** 명확한 질문을 작성해야 합니다.
+        * '보기1'부터 '보기5'까지의 모든 칸은 비워둡니다.
+        * '정답' 칸에는 정답 '단어'를 기재합니다. 만약 정답으로 인정될 수 있는 단어가 여러 개일 경우, **쉼표와 띄어쓰기(', ')**로 구분하여 모두 나열합니다. (예: `인공지능, 머신러닝`)
+        * '해설' 칸에는 정답에 대한 상세하고 친절한 설명을 작성합니다.
+
+**4. 최종 출력:** [출력 형식]에 명시된 규칙을 **반드시** 준수하여 최종 결과물을 생성합니다.
+
+## 출력 형식 (Output Format)
+
+### 1. 지문 (요청 시에만 출력)
+* **백틱(```) 코드 블록**으로 감싸서 제공합니다.
+    ```markdown
+    (여기에 지문 내용이 들어갑니다)
+    ```
+
+### 2. 퀴즈 세트 (표 형식)
+* **표 헤더:** `| 번호 | 구분 | 문항 | 보기1 | 보기2 | 보기3 | 보기4 | 보기5 | 정답 | 해설 |`
+
+---
+
+## 사용자 입력 (User Input)
+*아래 5개 항목을 작성하여 AI에게 전달할 최종 명령을 완성하세요.*
+
+1.  **주제, 텍스트 또는 첨부 파일:**
+2.  **객관식 문항 수:**
+3.  **주관식 문항 수:**
+4.  **객관식 보기 수 (4 또는 5):**
+5.  **지문 생성 여부 (예/아니오):**</textarea>
+
+    <!-- UI Controls -->
+    <div class="ui-controls">
+        <button id="prev-slide" class="nav-arrow"><i class="fas fa-arrow-left"></i></button>
+        <button id="next-slide" class="nav-arrow"><i class="fas fa-arrow-right"></i></button>
+        
+        <div class="viewer-controls">
+            <div id="zoom-menu-container">
+                <button id="zoom-menu-btn" class="control-btn" title="확대/축소 메뉴"><i class="fas fa-search"></i></button>
+                <div id="zoom-menu" class="menu">
+                    <button id="zoom-in" class="control-btn" title="확대"><i class="fas fa-search-plus"></i></button>
+                    <button id="zoom-out" class="control-btn" title="축소"><i class="fas fa-search-minus"></i></button>
+                    <button id="zoom-reset" class="control-btn" title="원래 크기"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+            <button id="fullscreen-btn" class="control-btn" title="전체 화면"><i class="fas fa-expand"></i></button>
+            <div id="save-menu-container">
+                 <button id="save-menu-btn" class="control-btn" title="저장 메뉴"><i class="fas fa-save"></i></button>
+                 <div id="save-menu" class="menu">
+                    <button id="save-current-png" class="control-btn" title="현재 슬라이드 PNG 저장"><i class="fas fa-file-image"></i></button>
+                    <button id="save-all-png" class="control-btn" title="전체 슬라이드 PNG 저장"><i class="fas fa-images"></i></button>
+                    <button id="save-all-pdf" class="control-btn" title="전체 슬라이드 PDF 저장"><i class="fas fa-file-pdf"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="page-number"></div>
+    <div class="loading-overlay">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <span id="loading-text"></span>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prev-slide');
+        const nextBtn = document.getElementById('next-slide');
+        const pageNumberEl = document.getElementById('page-number');
+        const presentationContainer = document.querySelector('.presentation-container');
+        const uiControls = document.querySelectorAll('.ui-controls, .viewer-controls');
+        
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const zoomResetBtn = document.getElementById('zoom-reset');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        
+        const zoomMenuBtn = document.getElementById('zoom-menu-btn');
+        const zoomMenu = document.getElementById('zoom-menu');
+        const saveMenuBtn = document.getElementById('save-menu-btn');
+        const saveMenu = document.getElementById('save-menu');
+
+        const saveCurrentPngBtn = document.getElementById('save-current-png');
+        const saveAllPngBtn = document.getElementById('save-all-png');
+        const saveAllPdfBtn = document.getElementById('save-all-pdf');
+        const loadingOverlay = document.querySelector('.loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+
+        const copyGemBtn = document.getElementById('copy-gem-btn');
+        const gemInstructions = document.getElementById('gem-instructions');
+
+        let currentSlide = 0;
+        let scale = 1;
+        let uiTimeout;
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'exit-left', 'exit-right');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+            pageNumberEl.textContent = `${currentSlide + 1} / ${slides.length}`;
+            prevBtn.style.display = currentSlide === 0 ? 'none' : 'block';
+            nextBtn.style.display = currentSlide === slides.length - 1 ? 'none' : 'block';
+        }
+
+        function showSlide(direction) {
+            const oldSlide = slides[currentSlide];
+            if (direction === 'next' && currentSlide < slides.length - 1) {
+                oldSlide.classList.add('exit-left');
+                currentSlide++;
+            } else if (direction === 'prev' && currentSlide > 0) {
+                oldSlide.classList.add('exit-right');
+                currentSlide--;
+            }
+            setTimeout(updateSlide, 50); // Wait for exit animation to start
+        }
+
+        // UI Controls Auto-hide
+        function showUiControls() {
+            clearTimeout(uiTimeout);
+            uiControls.forEach(el => el.style.opacity = '1');
+            uiTimeout = setTimeout(() => {
+                 uiControls.forEach(el => el.style.opacity = '0');
+            }, 1000);
+        }
+
+        document.body.addEventListener('mousemove', showUiControls);
+        document.body.addEventListener('mouseleave', () => {
+             clearTimeout(uiTimeout);
+             uiTimeout = setTimeout(() => {
+                 uiControls.forEach(el => el.style.opacity = '0');
+            }, 1000);
+        });
+
+
+        // Event Listeners
+        nextBtn.addEventListener('click', () => showSlide('next'));
+        prevBtn.addEventListener('click', () => showSlide('prev'));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') showSlide('next');
+            if (e.key === 'ArrowLeft') showSlide('prev');
+            if (e.key === 'ArrowUp') applyZoom(scale + 0.1);
+            if (e.key === 'ArrowDown') applyZoom(scale - 0.1);
+            if (e.key.toLowerCase() === 'r') applyZoom(1);
+            if (e.key.toLowerCase() === 'f') toggleFullscreen();
+        });
+
+        // Zoom functionality
+        function applyZoom(newScale) {
+            scale = Math.max(0.2, Math.min(newScale, 5)); // Clamp scale
+            presentationContainer.style.transform = `scale(${scale})`;
+        }
+
+        zoomInBtn.addEventListener('click', (e) => { e.stopPropagation(); applyZoom(scale + 0.2); });
+        zoomOutBtn.addEventListener('click', (e) => { e.stopPropagation(); applyZoom(scale - 0.2); });
+        zoomResetBtn.addEventListener('click', (e) => { e.stopPropagation(); applyZoom(1); });
+
+        // Fullscreen functionality
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+        
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        document.addEventListener('fullscreenchange', () => {
+            const icon = fullscreenBtn.querySelector('i');
+            if (document.fullscreenElement) {
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+            } else {
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+            }
+        });
+
+        // Menu functionality
+        function toggleMenu(menu, otherMenu) {
+            if (menu.style.display === 'flex') {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'flex';
+                otherMenu.style.display = 'none';
+            }
+        }
+
+        zoomMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(zoomMenu, saveMenu);
+        });
+        
+        saveMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(saveMenu, zoomMenu);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!zoomMenu.contains(e.target) && !zoomMenuBtn.contains(e.target)) {
+                zoomMenu.style.display = 'none';
+            }
+            if (!saveMenu.contains(e.target) && !saveMenuBtn.contains(e.target)) {
+                saveMenu.style.display = 'none';
+            }
+        });
+
+        // Copy GEM Instructions
+        if (copyGemBtn && gemInstructions) {
+            copyGemBtn.addEventListener('click', () => {
+                gemInstructions.select();
+                document.execCommand('copy');
+
+                const originalText = copyGemBtn.innerHTML;
+                copyGemBtn.innerHTML = '<i class="fas fa-check"></i> 복사 완료!';
+                copyGemBtn.classList.add('copied');
+
+                setTimeout(() => {
+                    copyGemBtn.innerHTML = originalText;
+                    copyGemBtn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // --- Save Functionality ---
+        function showLoading(text) {
+            loadingText.textContent = text;
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        async function prepareAndCapture(element, includePageNumber = false) {
+            const originalTransform = presentationContainer.style.transform;
+            presentationContainer.style.transform = 'scale(1)';
+            const originalTransition = element.style.transition;
+            const originalOpacity = element.style.opacity;
+            element.style.transition = 'none';
+            element.style.opacity = '1';
+            const pageNumOriginalDisplay = pageNumberEl.style.display;
+            pageNumberEl.style.display = includePageNumber ? 'block' : 'none';
+            
+            const images = element.querySelectorAll('img');
+            await Promise.all(Array.from(images).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => { img.onload = img.onerror = resolve; });
+            }));
+
+            const canvas = await html2canvas(element, {
+                backgroundColor: getComputedStyle(document.body).backgroundColor,
+                scale: 2,
+                logging: false,
+                useCORS: true,
+            });
+
+            presentationContainer.style.transform = originalTransform;
+            element.style.transition = originalTransition;
+            element.style.opacity = originalOpacity;
+            pageNumberEl.style.display = pageNumOriginalDisplay;
+
+            return canvas;
+        }
+
+        saveCurrentPngBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            saveMenu.style.display = 'none';
+            showLoading('이미지 생성 중...');
+            try {
+                const canvas = await prepareAndCapture(slides[currentSlide], false);
+                const link = document.createElement('a');
+                link.download = `slide_${currentSlide + 1}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (error) {
+                console.error('Error saving current slide:', error);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        saveAllPngBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            saveMenu.style.display = 'none';
+            
+            for (let i = 0; i < slides.length; i++) {
+                showLoading(`이미지 저장 중 (${i + 1}/${slides.length})...`);
+                try {
+                    const originalDisplay = slides[i].style.display;
+                    slides[i].style.display = 'flex';
+                    pageNumberEl.textContent = `${i + 1} / ${slides.length}`;
+
+                    const canvas = await prepareAndCapture(slides[i], true);
+                    const link = document.createElement('a');
+                    link.download = `slide_${i + 1}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    slides[i].style.display = originalDisplay;
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                } catch (error) {
+                    console.error(`Error saving slide ${i+1}:`, error);
+                }
+            }
+            updateSlide();
+            hideLoading();
+        });
+
+        saveAllPdfBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            saveMenu.style.display = 'none';
+            const { jsPDF } = window.jspdf;
+            
+            try {
+                const canvases = [];
+                for (let i = 0; i < slides.length; i++) {
+                    showLoading(`PDF 생성 중 (${i + 1}/${slides.length})...`);
+                    const originalDisplay = slides[i].style.display;
+                    slides[i].style.display = 'flex';
+                    pageNumberEl.textContent = `${i + 1} / ${slides.length}`;
+                    
+                    const canvas = await prepareAndCapture(slides[i], true);
+                    canvases.push(canvas);
+
+                    slides[i].style.display = originalDisplay;
+                }
+
+                showLoading('PDF 파일 조합 중...');
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'px',
+                    format: [canvases[0].width, canvases[0].height]
+                });
+
+                canvases.forEach((canvas, index) => {
+                    if (index > 0) {
+                        doc.addPage([canvas.width, canvas.height], 'landscape');
+                    }
+                    const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                    doc.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+                });
+
+                doc.save('presentation.pdf');
+
+            } catch (error) {
+                console.error('Error saving PDF:', error);
+            } finally {
+                updateSlide();
+                hideLoading();
+            }
+        });
+
+        // Initial setup
+        updateSlide();
+        showUiControls();
+    });
+    </script>
+</body>
+</html>
